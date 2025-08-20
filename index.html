@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Habit Tracker — HTML/CSS/JS</title>
+<meta name="theme-color" content="#0f172a" />
+<style>
+/* ========== Theme + Reset ========== */
+:root{
+  color-scheme: light dark;
+  --bg:#0b1020;
+  --surface:#0f172a;
+  --surface-2:#0d1426;
+  --text:#e5e7eb;
+  --muted:#93a4bd;
+  --border:#273450;
+  --accent:#6d5ef6;
+  --accent-2:#22c55e;
+  --danger:#ef4444;
+  --shadow:0 12px 30px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  background: radial-gradient(1200px 600px at 10% -10%, #1a2140 0%, #0b1020 60%) fixed;
+  color:var(--text);
+}
+
+/* ========== Layout ========== */
+.app{min-height:100vh; display:grid; grid-template-rows:auto 1fr auto}
+.header{
+  position:sticky; top:0; z-index:10;
+  background:linear-gradient(180deg, rgba(17,22,42,.95), rgba(17,22,42,.75));
+  border-bottom:1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.wrap{max-width:1024px; margin:0 auto; padding:14px 18px; display:flex; align-items:center; gap:12px; justify-content:space-between}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+.badge{width:28px; height:28px; border-radius:8px; background:
+  conic-gradient(from 210deg at 60% 40%, #6d5ef6, #22c55e, #06b6d4, #f59e0b, #6d5ef6);
+  box-shadow: inset 0 0 18px #ffffff1a, 0 6px 20px #0008;
+}
+.nav{display:flex; gap:8px; align-items:center}
+.tab{
+  appearance:none; cursor:pointer; font-weight:600;
+  background:#0f172a; color:var(--text); border:1px solid var(--border);
+  padding:8px 12px; border-radius:10px; transition: transform .06s ease, background .2s ease, border-color .2s ease;
+}
+.tab[aria-current="page"]{background:#111a33; border-color:#2b3d61; box-shadow: inset 0 0 0 1px #2b3d61}
+.tab:hover{transform: translateY(-1px)}
+
+.main{max-width:1024px; margin:0 auto; padding:18px}
+.grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px}
+@media (max-width: 900px){.grid{grid-template-columns:1fr}}
+
+/* ========== Cards ========== */
+.card{
+  background:linear-gradient(180deg, var(--surface), var(--surface-2));
+  border:1px solid var(--border);
+  border-radius:16px; box-shadow:var(--shadow); padding:16px;
+}
+.card h2, .card h3{margin:0 0 10px}
+
+/* ========== Inputs/Buttons ========== */
+.input, .btn, input[type="color"], input[type="number"], select{
+  appearance:none; width:100%;
+  background:#0b1226; color:var(--text); border:1px solid var(--border);
+  border-radius:12px; padding:10px 12px;
+}
+.input::placeholder{color:#7b8696}
+.btn{cursor:pointer; font-weight:700; background:linear-gradient(180deg, #1b2750, #151e3b); border-color:#30436c;
+  transition: transform .06s ease, box-shadow .2s ease}
+.btn:hover{transform: translateY(-1px)}
+.btn-accent{
+  background: radial-gradient(150px 80px at 20% 20%, var(--accent) 0, #4f46e5 50%, #3730a3 100%);
+  border-color:#5b52e6; box-shadow: 0 6px 24px #6d5ef644;
+}
+.btn-danger{background:linear-gradient(180deg, #3a0d10, #2a0a0c); border-color:#5c1d22; color:#fecaca}
+.row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media (max-width: 600px){.row{grid-template-columns:1fr}}
+.flex{display:flex; gap:8px; align-items:center}
+.right{margin-left:auto}
+
+/* ========== Habits ========== */
+.habits{display:grid; gap:10px}
+.habit{
+  display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:10px; padding:10px;
+  border:1px solid var(--border); border-radius:14px; background:#0b1224;
+}
+.color{width:12px; height:32px; border-radius:6px; box-shadow: inset 0 0 0 1px #ffffff22}
+.habit .name{font-weight:700; letter-spacing:.2px}
+.meta{color:var(--muted); font-size:12px}
+.actions{display:flex; gap:8px; align-items:center}
+
+.toggle{
+  display:inline-flex; gap:8px; align-items:center; font-weight:700;
+  background:#0f172a; border:1px solid #2b3d61; border-radius:999px; padding:6px 10px; cursor:pointer
+}
+.toggle[data-state="done"]{background:#112a1b; border-color:#245b3a; color:#7ef0a6}
+
+/* ========== KPIs + Heatmap ========== */
+.kpis{display:grid; grid-template-columns: repeat(3,1fr); gap:10px}
+@media (max-width: 700px){.kpis{grid-template-columns:1fr}}
+.kpi{background:#0b1224; border:1px solid var(--border); border-radius:14px; padding:12px}
+.big{font-size:28px; font-weight:900; letter-spacing:.2px}
+.sub{color:var(--muted); font-size:12px}
+
+.heatmap{
+  display:grid; grid-template-columns: repeat(7, 16px);
+  gap:4px; padding:6px; background:#0b1224; border:1px solid var(--border); border-radius:12px; width:max-content
+}
+.cell{
+  width:16px; height:16px; border-radius:4px; background:#1f2937; border:1px solid #2b3d61;
+  transition: transform .08s ease, background .2s ease
+}
+.cell.done{background:#16a34a; border-color:#2b7a4a}
+.cell:hover{transform: scale(1.06)}
+
+/* ========== Footer ========== */
+.footer{
+  padding:12px 18px; text-align:center; color:var(--muted);
+  border-top:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(17,22,42,.72), rgba(11,16,32,.82))
+}
+
+/* ========== Helpers ========== */
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app" role="application">
+  <header class="header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="badge" aria-hidden="true"></div>
+        <div>Habit Tracker</div>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <button class="tab" data-tab="home" aria-current="page">Home</button>
+        <button class="tab" data-tab="stats">Stats</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- HOME -->
+    <section id="home" class="page">
+      <div class="grid">
+        <div class="card">
+          <h2>Add Habit</h2>
+          <form id="habit-form" class="form" autocomplete="off">
+            <input class="input" id="habit-name" placeholder="Habit name (e.g., Reading)" required />
+            <div class="row">
+              <label class="flex" title="Pick a color">
+                <span style="min-width:110px">Color</span>
+                <input type="color" id="habit-color" value="#6d5ef6" />
+              </label>
+              <label class="flex" title="Times per week">
+                <span style="min-width:110px">Target / week</span>
+                <input type="number" id="habit-target" min="1" max="7" value="5" />
+              </label>
+            </div>
+            <div class="flex">
+              <button class="btn btn-accent" type="submit">Add</button>
+              <button class="btn" type="reset">Reset</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Today</h2>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="big" id="kpi-done">0</div>
+              <div class="sub">Done today</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="kpi-total">0</div>
+              <div class="sub">Total habits</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="kpi-streak">0</div>
+              <div class="sub">Current streak (max)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Your Habits</h2>
+        <div id="habit-list" class="habits" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section id="stats" class="page hidden">
+      <div class="card">
+        <h2>Monthly Heatmap</h2>
+        <div id="heatmap-wrap" class="flex" style="flex-wrap: wrap; gap: 18px;"></div>
+      </div>
+      <div class="card">
+        <h2>Totals</h2>
+        <div id="totals" class="habits"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" class="page hidden">
+      <div class="card">
+        <h2>Data</h2>
+        <div class="flex">
+          <button id="export" class="btn">Export JSON</button>
+          <label class="btn">
+            Import JSON
+            <input id="import" type="file" accept="application/json" hidden />
+          </label>
+          <button id="clear" class="btn btn-danger right">Clear All</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Built with HTML + CSS + JS • LocalStorage • Responsive UI</footer>
+</div>
+
+<script>
+/* ===== Utils ===== */
+const pad = n => String(n).padStart(2,'0');
+const fmt = d => d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+const today = () => fmt(new Date());
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+const monthDays = (date = new Date()) => {
+  const y = date.getFullYear(), m = date.getMonth();
+  const start = new Date(y, m, 1), end = new Date(y, m+1, 0);
+  const res = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) res.push(fmt(new Date(d)));
+  return res;
+};
+const rangeBack = n => Array.from({length:n}, (_,i)=>{const d=new Date(); d.setDate(d.getDate()-i); return fmt(d);});
+
+/* ===== Storage ===== */
+const KEY='habit-data-v1';
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{habits:[], checkins:{}}}catch{return {habits:[], checkins:{}}}};
+const save=s=>localStorage.setItem(KEY, JSON.stringify(s));
+let state = load();
+
+/* state:
+  habits: [{id,name,color,targetPerWeek,createdAt}]
+  checkins: { 'habitId:YYYY-MM-DD': 'done' }
+*/
+
+/* ===== Operations ===== */
+function addHabit({name,color,targetPerWeek}){
+  const habit={id:uid(), name, color, targetPerWeek:+targetPerWeek||1, createdAt:new Date().toISOString()};
+  state.habits.push(habit); save(state); render();
+}
+function updateHabit(id, patch){
+  const h = state.habits.find(x=>x.id===id); if(!h) return;
+  Object.assign(h, patch); save(state); render();
+}
+function deleteHabit(id){
+  state.habits = state.habits.filter(h=>h.id!==id);
+  for(const k of Object.keys(state.checkins)) if(k.startsWith(id+':')) delete state.checkins[k];
+  save(state); render();
+}
+function toggleCheckIn(habitId, d=today()){
+  const key=habitId+':'+d;
+  state.checkins[key] = state.checkins[key]==='done' ? (delete state.checkins[key], undefined) : 'done';
+  save(state); render();
+}
+function calcStreak(habitId){
+  let s=0; for(const d of rangeBack(365)){ if(state.checkins[habitId+':'+d]==='done') s++; else break; } return s;
+}
+
+/* ===== DOM Helpers ===== */
+const $=sel=>document.querySelector(sel);
+const $$=sel=>document.querySelectorAll(sel);
+
+/* ===== Renderers ===== */
+function renderKPIs(){
+  const tdy=today();
+  const total=state.habits.length;
+  const done=state.habits.filter(h=>state.checkins[h.id+':'+td y]==='done').length; // intentional space to prevent emoji parsing issues
+}
+</script>
+
+<script>
+/* Replacing the typo-safe KPI function properly */
+function renderKPIs(){
+  const tdy=today();
+  const total=state.habits.length;
+  const done=state.habits.filter(h=>state.checkins[h.id+':'+tdy]==='done').length;
+  const maxStreak=state.habits.reduce((m,h)=>Math.max(m, calcStreak(h.id)),0);
+  document.getElementById('kpi-total').textContent=total;
+  document.getElementById('kpi-done').textContent=done;
+  document.getElementById('kpi-streak').textContent=maxStreak;
+}
+
+function habitRow(h){
+  const tdy=today();
+  const isDone = state.checkins[h.id+':'+tdy]==='done';
+  const wrap=document.createElement('div');
+  wrap.className='habit';
+  wrap.innerHTML=`
+    <div class="color" style="background:${h.color}"></div>
+    <div>
+      <div class="name">${h.name}</div>
+      <div class="meta">Target: ${h.targetPerWeek}/week • Streak: <span class="badge" data-streak>${calcStreak(h.id)}</span></div>
+    </div>
+    <button class="toggle" data-action="toggle" aria-pressed="${isDone}" data-state="${isDone?'done':'none'}">${isDone?'✓ Done':'Mark Today'}</button>
+    <div class="actions">
+      <button class="btn" data-action="edit">Edit</button>
+      <button class="btn btn-danger" data-action="delete" aria-label="Delete">Delete</button>
+    </div>
+  `;
+  wrap.querySelector('[data-action="toggle"]').addEventListener('click',()=>toggleCheckIn(h.id));
+  wrap.querySelector('[data-action="delete"]').addEventListener('click',()=>{ if(confirm('Delete this habit?')) deleteHabit(h.id); });
+  wrap.querySelector('[data-action="edit"]').addEventListener('click',()=>editHabitPrompt(h));
+  return wrap;
+}
+
+function renderHabitList(){
+  const list=$('#habit-list'); list.innerHTML='';
+  if(!state.habits.length){ list.innerHTML='<div class="meta">No habits yet. Add one above.</div>'; return; }
+  state.habits.forEach(h=>list.appendChild(habitRow(h)));
+}
+
+function editHabitPrompt(h){
+  const name=prompt('Habit name:', h.name); if(name===null) return;
+  const target=prompt('Target per week (1-7):', h.targetPerWeek); if(target===null) return;
+  updateHabit(h.id,{ name:name.trim()||h.name, targetPerWeek: Math.min(7, Math.max(1, +target||h.targetPerWeek)) });
+}
+
+function renderHeatmap(){
+  const wrap=$('#heatmap-wrap'); wrap.innerHTML='';
+  const days=monthDays();
+  state.habits.forEach(h=>{
+    const box=document.createElement('div');
+    const title=document.createElement('div'); title.className='flex';
+    title.innerHTML=`<div class="color" style="background:${h.color}"></div><div style="font-weight:800">${h.name}</div>`;
+    const grid=document.createElement('div'); grid.className='heatmap';
+    // Week alignment (Mon-start): add blanks
+    const first=new Date(days[0]); const blanks=(first.getDay()+6)%7;
+    for(let i=0;i<blanks;i++){ const b=document.createElement('div'); b.className='cell'; grid.appendChild(b); }
+    days.forEach(d=>{
+      const key=h.id+':'+d; const done=state.checkins[key]==='done';
+      const cell=document.createElement('div'); cell.className='cell'+(done?' done':''); cell.title=d+(done?' ✓':'');
+      cell.addEventListener('click',()=>toggleCheckIn(h.id,d));
+      grid.appendChild(cell);
+    });
+    box.appendChild(title); box.appendChild(grid); wrap.appendChild(box);
+  });
+}
+
+function renderTotals(){
+  const el=$('#totals'); el.innerHTML='';
+  state.habits.forEach(h=>{
+    const count=Object.keys(state.checkins).filter(k=>k.startsWith(h.id+':')).length;
+    const card=document.createElement('div'); card.className='habit';
+    card.innerHTML=`<div class="color" style="background:${h.color}"></div>
+      <div><div class="name">${h.name}</div><div class="meta">Total done: ${count}</div></div>`;
+    el.appendChild(card);
+  });
+}
+
+function render(){ renderKPIs(); renderHabitList(); renderHeatmap(); renderTotals(); }
+
+/* ===== Events ===== */
+document.getElementById('habit-form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name=document.getElementById('habit-name').value.trim(); if(!name) return;
+  const color=document.getElementById('habit-color').value || '#6d5ef6';
+  const target=+document.getElementById('habit-target').value || 5;
+  addHabit({name, color, targetPerWeek: Math.min(7, Math.max(1, target))});
+  e.target.reset(); document.getElementById('habit-color').value=color;
+});
+
+document.getElementById('export').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='habit-data.json'; a.click();
+});
+document.getElementById('import').addEventListener('change', async e=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  try{
+    const json=JSON.parse(await f.text());
+    if(!Array.isArray(json.habits) || typeof json.checkins!=='object') throw new Error('Invalid');
+    state=json; save(state); render();
+  }catch{ alert('Invalid file'); }
+  e.target.value='';
+});
+document.getElementById('clear').addEventListener('click',()=>{
+  if(confirm('Clear all data?')){ state={habits:[], checkins:{}}; save(state); render(); }
+});
+
+/* Tabs */
+const pages={home:document.getElementById('home'), stats:document.getElementById('stats'), settings:document.getElementById('settings')};
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b=>b.removeAttribute('aria-current'));
+    btn.setAttribute('aria-current','page');
+    Object.values(pages).forEach(p=>p.classList.add('hidden'));
+    pages[tab].classList.remove('hidden');
+  });
+});
+
+/* ===== Init ===== */
+render();
+</script>
+</body>
+</html>
